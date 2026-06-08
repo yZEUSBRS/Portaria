@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PortariaPRO — Gestão de Condomínios</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14; --surface: #151820; --surface2: #1c2030; --border: #252a3a;
+    --accent: #f5a623; --accent2: #4fc3f7; --danger: #ff5252; --success: #69f0ae;
+    --warn: #ffca28; --text: #e8eaf6; --muted: #6b7394;
+    --font-head: 'Syne', sans-serif; --font-body: 'IBM Plex Sans', sans-serif; --font-mono: 'IBM Plex Mono', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; display: flex; }
+
+  /* LOGIN */
+  #loginScreen {
+    position: fixed; inset: 0; background: var(--bg); z-index: 999;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .login-box {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    padding: 40px 36px; width: 360px; max-width: 95vw;
+    animation: fadeIn 0.3s ease;
+  }
+  .login-logo { font-family: var(--font-head); font-size: 1.8rem; font-weight: 800; color: var(--accent); margin-bottom: 4px; }
+  .login-sub { font-size: 0.7rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; font-family: var(--font-mono); margin-bottom: 32px; }
+  .login-field { margin-bottom: 16px; }
+  .login-field label { font-size: 0.68rem; color: var(--muted); font-family: var(--font-mono); letter-spacing: 1px; text-transform: uppercase; display: block; margin-bottom: 6px; }
+  .login-field input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 11px 14px; font-family: var(--font-body); font-size: 0.9rem; outline: none; transition: border-color 0.15s; }
+  .login-field input:focus { border-color: var(--accent); }
+  .login-btn { width: 100%; padding: 12px; background: var(--accent); color: #000; border: none; border-radius: 8px; font-family: var(--font-head); font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 8px; transition: background 0.15s; }
+  .login-btn:hover { background: #ffb84d; }
+  .login-error { background: rgba(255,82,82,0.1); border: 1px solid rgba(255,82,82,0.3); border-radius: 6px; padding: 10px 14px; font-size: 0.8rem; color: var(--danger); margin-top: 12px; display: none; text-align: center; }
+  .sidebar { width: 220px; min-height: 100vh; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+  .logo { padding: 24px 20px 20px; border-bottom: 1px solid var(--border); }
+  .logo-title { font-family: var(--font-head); font-size: 1.3rem; font-weight: 800; letter-spacing: -0.5px; color: var(--accent); }
+  .logo-sub { font-size: 0.65rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; font-family: var(--font-mono); }
+  .nav { padding: 16px 0; flex: 1; }
+  .nav-section { padding: 6px 20px 2px; font-size: 0.6rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); font-family: var(--font-mono); margin-top: 8px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; cursor: pointer; font-size: 0.85rem; font-weight: 500; color: var(--muted); transition: all 0.15s; border-left: 3px solid transparent; margin: 1px 0; }
+  .nav-item:hover { color: var(--text); background: var(--surface2); }
+  .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(245,166,35,0.07); }
+  .nav-icon { font-size: 1rem; width: 18px; text-align: center; }
+  .status-bar { padding: 14px 20px; border-top: 1px solid var(--border); font-size: 0.72rem; font-family: var(--font-mono); color: var(--muted); }
+  .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--success); margin-right: 6px; animation: pulse 2s infinite; }
+  .status-dot.offline { background: var(--danger); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .main { margin-left: 220px; flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+  .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+  .page-title { font-family: var(--font-head); font-size: 1.1rem; font-weight: 700; letter-spacing: -0.3px; }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .time-display { font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); background: var(--surface2); padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); }
+  .db-status { font-family: var(--font-mono); font-size: 0.72rem; padding: 5px 10px; border-radius: 5px; border: 1px solid var(--border); }
+  .db-status.ok { color: var(--success); border-color: rgba(105,240,174,0.3); background: rgba(105,240,174,0.07); }
+  .db-status.err { color: var(--danger); border-color: rgba(255,82,82,0.3); background: rgba(255,82,82,0.07); }
+  .db-status.loading { color: var(--warn); border-color: rgba(255,202,40,0.3); background: rgba(255,202,40,0.07); }
+  .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-family: var(--font-body); font-size: 0.8rem; font-weight: 500; transition: all 0.15s; }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover { background: #ffb84d; }
+  .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-danger { background: rgba(255,82,82,0.15); color: var(--danger); border: 1px solid rgba(255,82,82,0.3); }
+  .btn-danger:hover { background: rgba(255,82,82,0.25); }
+  .btn-sm { padding: 5px 10px; font-size: 0.75rem; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .content { padding: 28px 32px; flex: 1; }
+  .page { display: none; }
+  .page.active { display: block; animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+  .card-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); font-family: var(--font-mono); margin-bottom: 8px; }
+  .card-value { font-family: var(--font-head); font-size: 2rem; font-weight: 800; line-height: 1; }
+  .card-sub { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+  .card.accent { border-color: rgba(245,166,35,0.4); background: rgba(245,166,35,0.06); }
+  .card.danger { border-color: rgba(255,82,82,0.4); background: rgba(255,82,82,0.06); }
+  .card.success { border-color: rgba(105,240,174,0.4); background: rgba(105,240,174,0.06); }
+  .card.info { border-color: rgba(79,195,247,0.4); background: rgba(79,195,247,0.06); }
+  .section-title { font-family: var(--font-head); font-size: 1rem; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; }
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 24px; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: var(--surface2); padding: 10px 16px; text-align: left; font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); font-family: var(--font-mono); border-bottom: 1px solid var(--border); }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+  tbody td { padding: 11px 16px; font-size: 0.82rem; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.68rem; font-weight: 600; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.5px; }
+  .badge-ok { background: rgba(105,240,174,0.15); color: var(--success); }
+  .badge-warn { background: rgba(255,202,40,0.15); color: var(--warn); }
+  .badge-alert { background: rgba(255,82,82,0.15); color: var(--danger); }
+  .badge-info { background: rgba(79,195,247,0.15); color: var(--accent2); }
+  .badge-muted { background: var(--surface2); color: var(--muted); }
+  .motors-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .motor-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px; transition: border-color 0.15s, transform 0.15s; }
+  .motor-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .motor-card.status-ok { border-left: 4px solid var(--success); }
+  .motor-card.status-warn { border-left: 4px solid var(--warn); }
+  .motor-card.status-alert { border-left: 4px solid var(--danger); }
+  .motor-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+  .motor-name { font-family: var(--font-head); font-size: 1rem; font-weight: 700; }
+  .motor-cond { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+  .motor-info { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .motor-field-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); font-family: var(--font-mono); }
+  .motor-field-val { font-size: 0.82rem; font-weight: 500; margin-top: 2px; }
+  .motor-actions { display: flex; gap: 6px; margin-top: 14px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label { font-size: 0.72rem; color: var(--muted); font-family: var(--font-mono); letter-spacing: 1px; text-transform: uppercase; }
+  input, select, textarea { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 9px 12px; font-family: var(--font-body); font-size: 0.82rem; outline: none; transition: border-color 0.15s; width: 100%; }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 70px; }
+  select option { background: var(--surface2); }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px; width: 540px; max-width: 95vw; max-height: 90vh; overflow-y: auto; animation: fadeIn 0.2s; }
+  .modal-title { font-family: var(--font-head); font-size: 1.1rem; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
+  .modal-close { cursor: pointer; color: var(--muted); font-size: 1.2rem; }
+  .modal-close:hover { color: var(--text); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+  .alert-banner { background: rgba(255,82,82,0.1); border: 1px solid rgba(255,82,82,0.3); border-radius: 8px; padding: 12px 16px; font-size: 0.82rem; color: #ff7070; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+  .tabs { display: flex; gap: 2px; background: var(--surface2); padding: 4px; border-radius: 8px; margin-bottom: 20px; width: fit-content; }
+  .tab { padding: 7px 16px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 500; color: var(--muted); transition: all 0.15s; }
+  .tab.active { background: var(--accent); color: #000; }
+  .tab:hover:not(.active) { color: var(--text); }
+  .checklist { display: flex; flex-direction: column; gap: 6px; }
+  .check-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 7px; font-size: 0.82rem; cursor: pointer; transition: all 0.15s; }
+  .check-item:hover { border-color: var(--accent2); }
+  .check-item.done { opacity: 0.5; text-decoration: line-through; }
+  .check-box { width: 16px; height: 16px; border: 2px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: var(--success); flex-shrink: 0; transition: all 0.15s; }
+  .check-item.done .check-box { background: rgba(105,240,174,0.2); border-color: var(--success); }
+  .progress-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 6px; }
+  .progress-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+  .fill-ok { background: var(--success); } .fill-warn { background: var(--warn); } .fill-danger { background: var(--danger); }
+  .log-item { display: flex; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--border); align-items: flex-start; font-size: 0.8rem; }
+  .log-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+  .log-time { font-family: var(--font-mono); font-size: 0.68rem; color: var(--muted); white-space: nowrap; margin-top: 2px; }
+  .empty { text-align: center; padding: 48px 20px; color: var(--muted); }
+  .empty-icon { font-size: 2.5rem; margin-bottom: 10px; }
+  .empty-text { font-size: 0.85rem; }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (max-width: 768px) {
+    .sidebar { width: 60px; }
+    .logo-title, .logo-sub, .nav-section, .nav-item span { display: none; }
+    .nav-item { justify-content: center; padding: 12px; }
+    .main { margin-left: 60px; }
+    .topbar { padding: 14px 18px; }
+    .content { padding: 20px 18px; }
+    .form-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">⚙️ PortariaPRO</div>
+    <div class="login-sub">Gestão de Condomínios</div>
+    <div class="login-field">
+      <label>Usuário</label>
+      <input type="text" id="loginUser" placeholder="Seu nome" autocomplete="username" />
+    </div>
+    <div class="login-field">
+      <label>Senha</label>
+      <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')fazerLogin()" />
+    </div>
+    <button class="login-btn" onclick="fazerLogin()">Entrar</button>
+    <div class="login-error" id="loginError">Usuário ou senha incorretos</div>
+  </div>
+</div>
+
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-title">⚙️ PortariaPRO</div>
+    <div class="logo-sub">Gestão de Condomínios</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Principal</div>
+    <div class="nav-item active" onclick="goTo('dashboard',this)"><span class="nav-icon">📊</span><span>Dashboard</span></div>
+    <div class="nav-section">Motores</div>
+    <div class="nav-item" onclick="goTo('motores',this)"><span class="nav-icon">⚙️</span><span>Portões</span></div>
+    <div class="nav-item" onclick="goTo('manutencao',this)"><span class="nav-icon">🔧</span><span>Manutenção</span></div>
+    <div class="nav-section">Operação</div>
+    <div class="nav-item" onclick="goTo('ocorrencias',this)"><span class="nav-icon">📝</span><span>Ocorrências</span></div>
+    <div class="nav-item" onclick="goTo('checklist',this)"><span class="nav-icon">✅</span><span>Checklist</span></div>
+    <div class="nav-item" onclick="goTo('log',this)"><span class="nav-icon">📋</span><span>Registro</span></div>
+  </nav>
+  <div class="status-bar"><span class="status-dot" id="statusDot"></span><span id="statusText">Conectando...</span></div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="page-title" id="pageTitle">Dashboard</div>
+    <div class="topbar-right">
+      <div class="db-status loading" id="dbStatus">⏳ Conectando</div>
+      <div class="time-display" id="clock">--:--:--</div>
+      <button class="btn btn-outline btn-sm" onclick="sair()">Sair 👤 <span id="userLabel"></span></button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="cards-grid">
+        <div class="card accent"><div class="card-label">Portões Cadastrados</div><div class="card-value" id="statMotores">—</div><div class="card-sub">motores monitorados</div></div>
+        <div class="card danger"><div class="card-label">Manutenções Pendentes</div><div class="card-value" id="statManut">—</div><div class="card-sub">aguardando serviço</div></div>
+        <div class="card success"><div class="card-label">Ocorrências Hoje</div><div class="card-value" id="statOcorr">—</div><div class="card-sub">registradas</div></div>
+        <div class="card info"><div class="card-label">Checklist Diário</div><div class="card-value" id="statCheck">—</div><div class="card-sub">concluído hoje</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div>
+          <div class="section-title">⚠️ Alertas</div>
+          <div id="dashAlerts"><div class="empty"><div class="empty-icon">🟢</div><div class="empty-text">Carregando...</div></div></div>
+        </div>
+        <div>
+          <div class="section-title">📋 Últimas Atividades</div>
+          <div id="dashLog" style="border:1px solid var(--border);border-radius:10px;padding:14px;background:var(--surface);">
+            <div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Carregando...</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOTORES -->
+    <div class="page" id="page-motores">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div></div>
+        <button class="btn btn-primary" onclick="openModal('modalMotor')">+ Cadastrar Portão</button>
+      </div>
+      <div class="motors-grid" id="motoresGrid"><div class="empty" style="grid-column:1/-1"><div class="empty-icon"><div class="spinner"></div></div><div class="empty-text">Carregando...</div></div></div>
+    </div>
+
+    <!-- MANUTENÇÃO -->
+    <div class="page" id="page-manutencao">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div class="tabs">
+          <div class="tab active" onclick="filterManut('todos',this)">Todos</div>
+          <div class="tab" onclick="filterManut('pendente',this)">Pendentes</div>
+          <div class="tab" onclick="filterManut('concluido',this)">Concluídos</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('modalManut')">+ Registrar</button>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Portão</th><th>Descrição</th><th>Prioridade</th><th>Data</th><th>Status</th><th>Ações</th></tr></thead>
+        <tbody id="manutTable"><tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted);">Carregando...</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- OCORRÊNCIAS -->
+    <div class="page" id="page-ocorrencias">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div></div>
+        <button class="btn btn-primary" onclick="openModal('modalOcorr')">+ Nova Ocorrência</button>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Data/Hora</th><th>Tipo</th><th>Local</th><th>Descrição</th><th>Status</th><th>Ações</th></tr></thead>
+        <tbody id="ocorrTable"><tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted);">Carregando...</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- CHECKLIST -->
+    <div class="page" id="page-checklist">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div>
+          <div style="font-size:0.8rem;color:var(--muted);font-family:var(--font-mono);">PROGRESSO DO DIA</div>
+          <div id="checkProgress" style="font-size:0.9rem;font-weight:600;color:var(--accent);margin-top:4px;">0 / 0 itens</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-outline" onclick="resetChecklist()">↺ Resetar</button>
+          <button class="btn btn-primary" onclick="openModal('modalCheckItem')">+ Adicionar Item</button>
+        </div>
+      </div>
+      <div class="progress-bar" style="height:8px;margin-bottom:24px;"><div class="progress-fill fill-ok" id="checkBar" style="width:0%"></div></div>
+      <div class="checklist" id="checklistItems"><div class="empty"><div class="empty-icon"><div class="spinner"></div></div><div class="empty-text">Carregando...</div></div></div>
+    </div>
+
+    <!-- LOG -->
+    <div class="page" id="page-log">
+      <div style="margin-bottom:16px;display:flex;justify-content:flex-end;">
+        <button class="btn btn-outline btn-sm" onclick="clearLog()">🗑 Limpar Registro</button>
+      </div>
+      <div class="table-wrap" style="padding:16px;" id="logContainer"><div class="empty"><div class="empty-icon"><div class="spinner"></div></div><div class="empty-text">Carregando...</div></div></div>
+    </div>
+
+  </div>
+</main>
+
+<!-- MODAL MOTOR -->
+<div class="modal-overlay" id="modalMotor">
+  <div class="modal">
+    <div class="modal-title">⚙️ Cadastrar Portão/Motor <span class="modal-close" onclick="closeModal('modalMotor')">✕</span></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Nome do Portão</label><input type="text" id="mNome" placeholder="Ex: Portão Principal" /></div>
+      <div class="form-group"><label>Condomínio</label><input type="text" id="mCond" placeholder="Ex: Res. das Flores" /></div>
+      <div class="form-group"><label>Marca do Motor</label><input type="text" id="mMarca" placeholder="Ex: Peccinin, Garen..." /></div>
+      <div class="form-group"><label>Modelo</label><input type="text" id="mModelo" placeholder="Ex: Turbo 1/2 HP" /></div>
+      <div class="form-group"><label>Data de Instalação</label><input type="date" id="mInstalacao" /></div>
+      <div class="form-group"><label>Próxima Revisão</label><input type="date" id="mRevisao" /></div>
+      <div class="form-group"><label>Status Atual</label>
+        <select id="mStatus"><option value="ok">✅ Funcionando Normal</option><option value="warn">⚠️ Atenção / Verificar</option><option value="alert">🔴 Parado / Defeito</option></select>
+      </div>
+      <div class="form-group"><label>Nº de Série</label><input type="text" id="mSerie" placeholder="Opcional" /></div>
+      <div class="form-group full"><label>Observações</label><textarea id="mObs" placeholder="Detalhes adicionais..."></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modalMotor')">Cancelar</button>
+      <button class="btn btn-primary" id="btnSalvarMotor" onclick="salvarMotor()">Salvar Portão</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MANUTENÇÃO -->
+<div class="modal-overlay" id="modalManut">
+  <div class="modal">
+    <div class="modal-title">🔧 Registrar Manutenção <span class="modal-close" onclick="closeModal('modalManut')">✕</span></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Portão</label><select id="mnPortao"></select></div>
+      <div class="form-group"><label>Prioridade</label>
+        <select id="mnPrioridade"><option value="alta">🔴 Alta</option><option value="media">🟡 Média</option><option value="baixa">🟢 Baixa</option></select>
+      </div>
+      <div class="form-group full"><label>Descrição do Problema</label><textarea id="mnDesc" placeholder="Descreva o problema..."></textarea></div>
+      <div class="form-group"><label>Data</label><input type="date" id="mnData" /></div>
+      <div class="form-group"><label>Responsável / Empresa</label><input type="text" id="mnResp" placeholder="Quem vai resolver?" /></div>
+      <div class="form-group full"><label>Observações</label><textarea id="mnObs" placeholder="Informações adicionais..."></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modalManut')">Cancelar</button>
+      <button class="btn btn-primary" id="btnSalvarManut" onclick="salvarManut()">Registrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL OCORRÊNCIA -->
+<div class="modal-overlay" id="modalOcorr">
+  <div class="modal">
+    <div class="modal-title">📝 Registrar Ocorrência <span class="modal-close" onclick="closeModal('modalOcorr')">✕</span></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Tipo</label>
+        <select id="ocTipo">
+          <option value="Portão">⚙️ Portão/Motor</option><option value="Segurança">🔐 Segurança</option>
+          <option value="Visitante">👤 Visitante</option><option value="Barulho">🔊 Barulho</option>
+          <option value="Entrega">📦 Entrega</option><option value="Manutenção">🔧 Manutenção</option><option value="Outro">📌 Outro</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Local</label><input type="text" id="ocLocal" placeholder="Ex: Portaria, Garagem..." /></div>
+      <div class="form-group full"><label>Descrição</label><textarea id="ocDesc" placeholder="Descreva a ocorrência..."></textarea></div>
+      <div class="form-group"><label>Responsável</label><input type="text" id="ocResp" placeholder="Seu nome" /></div>
+      <div class="form-group"><label>Status</label>
+        <select id="ocStatus"><option value="Aberta">Aberta</option><option value="Em andamento">Em andamento</option><option value="Resolvida">Resolvida</option></select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modalOcorr')">Cancelar</button>
+      <button class="btn btn-primary" id="btnSalvarOcorr" onclick="salvarOcorr()">Registrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CHECKLIST -->
+<div class="modal-overlay" id="modalCheckItem">
+  <div class="modal" style="width:400px;">
+    <div class="modal-title">✅ Adicionar Item <span class="modal-close" onclick="closeModal('modalCheckItem')">✕</span></div>
+    <div class="form-group"><label>Tarefa</label><input type="text" id="ckTexto" placeholder="Ex: Verificar motor portão principal" /></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modalCheckItem')">Cancelar</button>
+      <button class="btn btn-primary" onclick="adicionarCheckItem()">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== LOGIN =====
+function fazerLogin() {
+  var user = document.getElementById('loginUser').value.trim().toLowerCase();
+  var pass = document.getElementById('loginPass').value.trim();
+  var usuarios = ['diego','arcisio','alex'];
+  var senha = '4428proJJ';
+
+  if (usuarios.indexOf(user) !== -1 && pass === senha) {
+    sessionStorage.setItem('portaria_user', user);
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('userLabel').textContent = user.charAt(0).toUpperCase() + user.slice(1);
+    iniciarApp(); else {
+    var erro = document.getElementById('loginError');
+    erro.style.display = 'block';
+    document.getElementById('loginPass').value = '';
+    setTimeout(function(){ erro.style.display = 'none'; }, 3000);
+  }
+}
+
+function sair() {
+  sessionStorage.removeItem('portaria_user');
+  location.reload();
+}
+
+function verificarLogin() {
+  var user = sessionStorage.getItem('portaria_user');
+  if (user) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('userLabel').textContent = user.charAt(0).toUpperCase() + user.slice(1);
+    return true;
+  }
+  return false;
+}
+
+// ===== SUPABASE CONFIG =====
+const SB_URL = 'https://tdhjgpwsiczzyziivogt.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRkaGpncHdzaWN6enl6aWl2b2d0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4OTE0MjEsImV4cCI6MjA5NjQ2NzQyMX0.7y0P1zDja_lEf6KCjDevaj8AbmrY1Aoex5RXvMlyluw';
+
+const headers = {
+  'apikey': SB_KEY,
+  'Authorization': 'Bearer ' + SB_KEY,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=representation'
+};
+
+async function sb(method, table, body = null, query = '') {
+  const res = await fetch(`${SB_URL}/rest/v1/${table}${query}`, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : null
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`${res.status}: ${err}`);
+  }
+  if (res.status === 204) return null;
+  return res.json();
+}
+
+const GET  = (t, q='') => sb('GET', t, null, q);
+const POST = (t, b)    => sb('POST', t, b);
+const PATCH = (t, b, q) => sb('PATCH', t, b, q);
+const DEL  = (t, q)    => sb('DELETE', t, null, q);
+
+// ===== CONNECTION STATUS =====
+let connected = false;
+async function checkConnection() {
+  try {
+    await GET('motores', '?limit=1');
+    connected = true;
+    document.getElementById('dbStatus').className = 'db-status ok';
+    document.getElementById('dbStatus').textContent = '☁️ Online';
+    document.getElementById('statusDot').className = 'status-dot';
+    document.getElementById('statusText').textContent = 'Conectado';
+  } catch(e) {
+    connected = false;
+    document.getElementById('dbStatus').className = 'db-status err';
+    document.getElementById('dbStatus').textContent = '❌ Offline';
+    document.getElementById('statusDot').className = 'status-dot offline';
+    document.getElementById('statusText').textContent = 'Sem conexão';
+    console.error('Supabase:', e.message);
+  }
+}
+
+// ===== NAV =====
+let currentPage = 'dashboard';
+function goTo(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  if (el) el.classList.add('active');
+  const titles = { dashboard:'Dashboard', motores:'Portões & Motores', manutencao:'Manutenção', ocorrencias:'Ocorrências', checklist:'Checklist Diário', log:'Registro de Atividades' };
+  document.getElementById('pageTitle').textContent = titles[page] || page;
+  currentPage = page;
+  if (page === 'dashboard')   loadDashboard();
+  if (page === 'motores')     loadMotores();
+  if (page === 'manutencao')  loadManut();
+  if (page === 'ocorrencias') loadOcorr();
+  if (page === 'checklist')   loadChecklist();
+  if (page === 'log')         loadLog();
+}
+
+function openModal(id) {
+  if (id === 'modalManut') populatePortaoSelect('mnPortao');
+  document.getElementById(id).classList.add('open');
+  if (id === 'modalManut') document.getElementById('mnData').value = new Date().toISOString().split('T')[0];
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
+
+function setLoading(btnId, loading) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.disabled = loading;
+  btn.innerHTML = loading ? '<span class="spinner"></span>' : btn.dataset.label || btn.textContent;
+}
+
+// ===== LOG =====
+async function addLog(msg, cor = '#4fc3f7') {
+  try { await POST('log_atividades', { mensagem: msg, cor }); } catch(e) {}
+  if (currentPage === 'log') loadLog();
+  if (currentPage === 'dashboard') loadDashboard();
+}
+
+async function loadLog() {
+  const container = document.getElementById('logContainer');
+  try {
+    const data = await GET('log_atividades', '?order=created_at.desc&limit=100');
+    if (!data.length) { container.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Nenhuma atividade registrada</div></div>'; return; }
+    container.innerHTML = data.map(l => {
+      const dt = new Date(l.created_at);
+      return `<div class="log-item">
+        <div class="log-dot" style="background:${l.cor}"></div>
+        <div style="flex:1">${l.mensagem}</div>
+        <div class="log-time">${dt.toLocaleDateString('pt-BR')} ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+      </div>`;
+    }).join('');
+  } catch(e) { container.innerHTML = `<div class="empty"><div class="empty-icon">❌</div><div class="empty-text">Erro ao carregar: ${e.message}</div></div>`; }
+}
+
+async function clearLog() {
+  if (!confirm('Limpar todo o registro?')) return;
+  try { await DEL('log_atividades', '?id=gte.0'); loadLog(); } catch(e) { alert('Erro: ' + e.message); }
+}
+
+// ===== MOTORES =====
+let motoresCache = [];
+
+async function loadMotores() {
+  const grid = document.getElementById('motoresGrid');
+  grid.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="empty-icon"><div class="spinner"></div></div><div class="empty-text">Carregando...</div></div>';
+  try {
+    motoresCache = await GET('motores', '?order=created_at.desc');
+    renderMotores(motoresCache);
+  } catch(e) { grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">❌</div><div class="empty-text">Erro: ${e.message}</div></div>`; }
+}
+
+function renderMotores(data) {
+  const grid = document.getElementById('motoresGrid');
+  if (!data.length) { grid.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="empty-icon">⚙️</div><div class="empty-text">Nenhum portão cadastrado.</div></div>'; return; }
+  const badge = s => s === 'ok' ? '<span class="badge badge-ok">Normal</span>' : s === 'warn' ? '<span class="badge badge-warn">Atenção</span>' : '<span class="badge badge-alert">Defeito</span>';
+  grid.innerHTML = data.map(m => {
+    const dias = m.revisao ? Math.ceil((new Date(m.revisao) - new Date()) / 86400000) : null;
+    return `<div class="motor-card status-${m.status}">
+      <div class="motor-header"><div><div class="motor-name">⚙️ ${m.nome}</div><div class="motor-cond">🏢 ${m.condominio}</div></div>${badge(m.status)}</div>
+      <div class="motor-info">
+        <div class="motor-field"><div class="motor-field-label">Marca</div><div class="motor-field-val">${m.marca||'—'}</div></div>
+        <div class="motor-field"><div class="motor-field-label">Modelo</div><div class="motor-field-val">${m.modelo||'—'}</div></div>
+        <div class="motor-field"><div class="motor-field-label">Instalação</div><div class="motor-field-val">${m.instalacao ? new Date(m.instalacao+'T12:00').toLocaleDateString('pt-BR') : '—'}</div></div>
+        <div class="motor-field"><div class="motor-field-label">Próx. Revisão</div>
+          <div class="motor-field-val" style="color:${dias!==null&&dias<30?'var(--warn)':'inherit'}">
+            ${m.revisao ? new Date(m.revisao+'T12:00').toLocaleDateString('pt-BR') : '—'}
+            ${dias!==null&&dias<30?`<span style="font-size:.65rem;color:var(--warn)"> (${dias}d)</span>`:''}
+          </div>
+        </div>
+      </div>
+      ${m.obs?`<div style="font-size:.75rem;color:var(--muted);margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">${m.obs}</div>`:''}
+      <div class="motor-actions">
+        <select class="btn btn-outline btn-sm" style="cursor:pointer;" onchange="mudarStatusMotor(${m.id},this.value);this.value=''">
+          <option value="">Mudar Status</option>
+          <option value="ok">✅ Normal</option><option value="warn">⚠️ Atenção</option><option value="alert">🔴 Defeito</option>
+        </select>
+        <button class="btn btn-danger btn-sm" onclick="deletarMotor(${m.id})">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function salvarMotor() {
+  const nome = document.getElementById('mNome').value.trim();
+  const cond = document.getElementById('mCond').value.trim();
+  if (!nome || !cond) return alert('Preencha nome e condomínio.');
+  setLoading('btnSalvarMotor', true);
+  try {
+    await POST('motores', { nome, condominio: cond, marca: document.getElementById('mMarca').value.trim(), modelo: document.getElementById('mModelo').value.trim(), instalacao: document.getElementById('mInstalacao').value||null, revisao: document.getElementById('mRevisao').value||null, status: document.getElementById('mStatus').value, serie: document.getElementById('mSerie').value.trim(), obs: document.getElementById('mObs').value.trim() });
+    await addLog(`Portão cadastrado: ${nome} – ${cond}`, '#f5a623');
+    closeModal('modalMotor');
+    ['mNome','mCond','mMarca','mModelo','mInstalacao','mRevisao','mSerie','mObs'].forEach(id => document.getElementById(id).value='');
+    loadMotores();
+  } catch(e) { alert('Erro: ' + e.message); }
+  setLoading('btnSalvarMotor', false);
+}
+
+async function mudarStatusMotor(id, status) {
+  if (!status) return;
+  try {
+    await PATCH('motores', { status }, `?id=eq.${id}`);
+    await addLog(`Status do portão alterado → ${status}`, status==='ok'?'#69f0ae':status==='warn'?'#ffca28':'#ff5252');
+    loadMotores();
+    if (currentPage === 'dashboard') loadDashboard();
+  } catch(e) { alert('Erro: ' + e.message); }
+}
+
+async function deletarMotor(id) {
+  if (!confirm('Remover este portão?')) return;
+  try {
+    const m = motoresCache.find(x => x.id === id);
+    await DEL('motores', `?id=eq.${id}`);
+    await addLog(`Portão removido: ${m?.nome}`, '#ff5252');
+    loadMotores();
+  } catch(e) { alert('Erro: ' + e.message); }
+}
+
+function populatePortaoSelect(selId) {
+  const sel = document.getElementById(selId);
+  sel.innerHTML = motoresCache.length
+    ? motoresCache.map(m => `<option value="${m.id}">${m.nome} – ${m.condominio}</option>`).join('')
+    : '<option value="">Nenhum portão cadastrado</option>';
+}
+
+// ===== MANUTENÇÃO =====
+let manutFilter = 'todos';
+function filterManut(f, el) {
+  manutFilter = f;
+  document.querySelectorAll('#page-manutencao .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  loadManut();
+}
+
+async function loadManut() {
+  const tbody = document.getElementById('manutTable');
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--muted);"><div class="spinner" style="margin:auto"></div></td></tr>';
+  try {
+    let q = '?order=created_at.desc';
+    if (manutFilter !== 'todos') q += `&status=eq.${manutFilter}`;
+    const data = await GET('manutencoes', q);
+    renderManut(data);
+  } catch(e) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--danger);">Erro: ${e.message}</td></tr>`; }
+}
+
+function renderManut(data) {
+  const tbody = document.getElementById('manutTable');
+  if (!data.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted);">Nenhuma manutenção encontrada</td></tr>'; return; }
+  const prioLabel = { alta:'<span class="badge badge-alert">Alta</span>', media:'<span class="badge badge-warn">Média</span>', baixa:'<span class="badge badge-ok">Baixa</span>' };
+  const statusLabel = { pendente:'<span class="badge badge-warn">Pendente</span>', concluido:'<span class="badge badge-ok">Concluído</span>' };
+  tbody.innerHTML = data.map(m => `<tr>
+    <td><strong>${m.portao_nome||'Geral'}</strong></td>
+    <td>${m.descricao}</td>
+    <td>${prioLabel[m.prioridade]||m.prioridade}</td>
+    <td style="font-family:var(--font-mono);font-size:.75rem;">${m.data?new Date(m.data+'T12:00').toLocaleDateString('pt-BR'):'—'}</td>
+    <td>${statusLabel[m.status]||m.status}</td>
+    <td style="display:flex;gap:6px;">
+      ${m.status==='pendente'?`<button class="btn btn-outline btn-sm" onclick="concluirManut(${m.id})">✅ Concluir</button>`:''}
+      <button class="btn btn-danger btn-sm" onclick="deletarManut(${m.id})">🗑</button>
+    </td>
+  </tr>`).join('');
+}
+
+async function salvarManut() {
+  const desc = document.getElementById('mnDesc').value.trim();
+  if (!desc) return alert('Descreva o problema.');
+  const portaoId = document.getElementById('mnPortao').value;
+  const portao = motoresCache.find(m => m.id == portaoId);
+  setLoading('btnSalvarManut', true);
+  try {
+    await POST('manutencoes', { portao_id: portaoId||null, portao_nome: portao?`${portao.nome} – ${portao.condominio}`:'Geral', descricao: desc, prioridade: document.getElementById('mnPrioridade').value, data: document.getElementById('mnData').value||null, responsavel: document.getElementById('mnResp').value.trim(), obs: document.getElementById('mnObs').value.trim(), status:'pendente' });
+    await addLog(`Manutenção registrada: ${desc.substring(0,50)}`, '#ffca28');
+    closeModal('modalManut');
+    ['mnDesc','mnResp','mnObs'].forEach(id => document.getElementById(id).value='');
+    loadManut();
+  } catch(e) { alert('Erro: ' + e.message); }
+  setLoading('btnSalvarManut', false);
+}
+
+async function concluirManut(id) {
+  try {
+    await PATCH('manutencoes', { status:'concluido' }, `?id=eq.${id}`);
+    await addLog('Manutenção concluída', '#69f0ae');
+    loadManut();
+    if (currentPage==='dashboard') loadDashboard();
+  } catch(e) { alert('Erro: ' + e.message); }
+}
+
+async function deletarManut(id) {
+  if (!confirm('Remover este registro?')) return;
+  try { await DEL('manutencoes', `?id=eq.${id}`); addLog('Manutenção removida','#ff5252'); loadManut(); } catch(e) { alert('Erro: ' + e.message); }
+}
+
+// ===== OCORRÊNCIAS =====
+async function loadOcorr() {
+  const tbody = document.getElementById('ocorrTable');
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--muted);"><div class="spinner" style="margin:auto"></div></td></tr>';
+  try {
+    const data = await GET('ocorrencias', '?order=created_at.desc');
+    renderOcorr(data);
+  } catch(e) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--danger);">Erro: ${e.message}</td></tr>`; }
+}
+
+function renderOcorr(data) {
+  const tbody = document.getElementById('ocorrTable');
+  if (!data.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted);">Nenhuma ocorrência registrada</td></tr>'; return; }
+  const sBadge = s => s==='Resolvida'?'badge-ok':s==='Em andamento'?'badge-info':'badge-warn';
+  tbody.innerHTML = data.map(o => {
+    const dt = new Date(o.created_at);
+    return `<tr>
+      <td style="font-family:var(--font-mono);font-size:.73rem;">${dt.toLocaleDateString('pt-BR')} ${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</td>
+      <td><span class="badge badge-muted">${o.tipo}</span></td>
+      <td>${o.local||'—'}</td>
+      <td>${o.descricao}</td>
+      <td><span class="badge ${sBadge(o.status)}">${o.status}</span></td>
+      <td style="display:flex;gap:6px;">
+        ${o.status!=='Resolvida'?`<button class="btn btn-outline btn-sm" onclick="resolverOcorr(${o.id})">✔ Resolver</button>`:''}
+        <button class="btn btn-danger btn-sm" onclick="deletarOcorr(${o.id})">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function salvarOcorr() {
+  const desc = document.getElementById('ocDesc').value.trim();
+  if (!desc) return alert('Descreva a ocorrência.');
+  setLoading('btnSalvarOcorr', true);
+  try {
+    await POST('ocorrencias', { tipo: document.getElementById('ocTipo').value, local: document.getElementById('ocLocal').value.trim(), descricao: desc, responsavel: document.getElementById('ocResp').value.trim(), status: document.getElementById('ocStatus').value });
+    await addLog(`Ocorrência: ${document.getElementById('ocTipo').value} – ${desc.substring(0,40)}`, '#4fc3f7');
+    closeModal('modalOcorr');
+    ['ocLocal','ocDesc','ocResp'].forEach(id => document.getElementById(id).value='');
+    loadOcorr();
+  } catch(e) { alert('Erro: ' + e.message); }
+  setLoading('btnSalvarOcorr', false);
+}
+
+async function resolverOcorr(id) {
+  try { await PATCH('ocorrencias', { status:'Resolvida' }, `?id=eq.${id}`); addLog('Ocorrência resolvida','#69f0ae'); loadOcorr(); if(currentPage==='dashboard') loadDashboard(); } catch(e) { alert('Erro: ' + e.message); }
+}
+async function deletarOcorr(id) {
+  if (!confirm('Remover?')) return;
+  try { await DEL('ocorrencias', `?id=eq.${id}`); addLog('Ocorrência removida','#ff5252'); loadOcorr(); } catch(e) { alert('Erro: ' + e.message); }
+}
+
+// ===== CHECKLIST =====
+async function loadChecklist() {
+  const container = document.getElementById('checklistItems');
+  container.innerHTML = '<div class="empty"><div class="empty-icon"><div class="spinner"></div></div><div class="empty-text">Carregando...</div></div>';
+  try {
+    const data = await GET('checklist', '?order=created_at.asc');
+    renderChecklist(data);
+  } catch(e) { container.innerHTML = `<div class="empty"><div class="empty-icon">❌</div><div class="empty-text">Erro: ${e.message}</div></div>`; }
+}
+
+function renderChecklist(data) {
+  const container = document.getElementById('checklistItems');
+  if (!data.length) { container.innerHTML = '<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">Nenhum item. Adicione tarefas à sua rotina.</div></div>'; updateCheckProgress(0,0); return; }
+  container.innerHTML = data.map(c => `
+    <div class="check-item ${c.feito?'done':''}" onclick="toggleCheck(${c.id},${!c.feito})">
+      <div class="check-box">${c.feito?'✓':''}</div>
+      <span style="flex:1">${c.texto}</span>
+      <button class="btn btn-danger btn-sm" style="opacity:.5;" onclick="event.stopPropagation();deletarCheckItem(${c.id})">✕</button>
+    </div>`).join('');
+  const feitos = data.filter(c => c.feito).length;
+  updateCheckProgress(feitos, data.length);
+}
+
+function updateCheckProgress(feitos, total) {
+  const pct = total > 0 ? Math.round(feitos/total*100) : 0;
+  document.getElementById('checkProgress').textContent = `${feitos} / ${total} itens concluídos`;
+  const bar = document.getElementById('checkBar');
+  bar.style.width = pct + '%';
+  bar.className = 'progress-fill ' + (pct>=100?'fill-ok':pct>=50?'fill-warn':'fill-danger');
+  document.getElementById('statCheck').textContent = pct + '%';
+}
+
+async function toggleCheck(id, feito) {
+  try { await PATCH('checklist', { feito }, `?id=eq.${id}`); loadChecklist(); if(currentPage==='dashboard') loadDashboard(); } catch(e) {}
+}
+
+async function adicionarCheckItem() {
+  const texto = document.getElementById('ckTexto').value.trim();
+  if (!texto) return alert('Digite uma tarefa.');
+  try {
+    await POST('checklist', { texto, feito: false });
+    document.getElementById('ckTexto').value = '';
+    closeModal('modalCheckItem');
+    loadChecklist();
+  } catch(e) { alert('Erro: ' + e.message); }
+}
+
+async function deletarCheckItem(id) {
+  try { await DEL('checklist', `?id=eq.${id}`); loadChecklist(); } catch(e) {}
+}
+
+async function resetChecklist() {
+  if (!confirm('Resetar todos os itens para não feito?')) return;
+  try {
+    await PATCH('checklist', { feito: false }, '?feito=eq.true');
+    loadChecklist();
+  } catch(e) { alert('Erro: ' + e.message); }
+}
+
+// ===== DASHBOARD =====
+async function loadDashboard() {
+  try {
+    const [motores, manut, ocorr, checklist, logs] = await Promise.all([
+      GET('motores', '?order=created_at.desc'),
+      GET('manutencoes', '?status=eq.pendente'),
+      GET('ocorrencias', '?order=created_at.desc'),
+      GET('checklist', '?order=created_at.asc'),
+      GET('log_atividades', '?order=created_at.desc&limit=6')
+    ]);
+    motoresCache = motores;
+
+    document.getElementById('statMotores').textContent = motores.length;
+    document.getElementById('statManut').textContent = manut.length;
+
+    const hoje = new Date().toLocaleDateString('pt-BR');
+    const ocHoje = ocorr.filter(o => new Date(o.created_at).toLocaleDateString('pt-BR') === hoje).length;
+    document.getElementById('statOcorr').textContent = ocHoje;
+
+    const feitos = checklist.filter(c => c.feito).length;
+    const pct = checklist.length > 0 ? Math.round(feitos/checklist.length*100) : 0;
+    document.getElementById('statCheck').textContent = pct + '%';
+
+    // Alertas
+    const alertsDiv = document.getElementById('dashAlerts');
+    const alerts = [];
+    motores.filter(m => m.status==='alert').forEach(m => alerts.push(`🔴 Portão com defeito: <strong>${m.nome}</strong> – ${m.condominio}`));
+    motores.filter(m => m.status==='warn').forEach(m => alerts.push(`⚠️ Portão com atenção: <strong>${m.nome}</strong> – ${m.condominio}`));
+    manut.filter(m => m.prioridade==='alta').forEach(m => alerts.push(`🔧 Manutenção urgente: ${m.descricao.substring(0,60)}`));
+    motores.forEach(m => {
+      if (m.revisao) {
+        const dias = Math.ceil((new Date(m.revisao) - new Date()) / 86400000);
+        if (dias >= 0 && dias <= 30) alerts.push(`📅 Revisão em ${dias} dias: <strong>${m.nome}</strong>`);
+      }
+    });
+    alertsDiv.innerHTML = alerts.length
+      ? alerts.map(a => `<div class="alert-banner">⚠️ <span>${a}</span></div>`).join('')
+      : '<div class="empty"><div class="empty-icon">🟢</div><div class="empty-text">Nenhum alerta no momento</div></div>';
+
+    // Log recente
+    const dashLog = document.getElementById('dashLog');
+    dashLog.innerHTML = logs.length
+      ? logs.map(l => { const dt=new Date(l.created_at); return `<div class="log-item" style="padding:7px 0;font-size:.75rem;"><div class="log-dot" style="background:${l.cor};width:7px;height:7px;"></div><div style="flex:1">${l.mensagem}</div><div class="log-time">${dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div></div>`; }).join('')
+      : '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Nenhuma atividade</div></div>';
+  } catch(e) { console.error('Dashboard error:', e); }
+}
+
+// ===== CLOCK =====
+setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('pt-BR'); }, 1000);
+document.getElementById('clock').textContent = new Date().toLocaleTimeString('pt-BR');
+
+// ===== INIT =====
+async function iniciarApp() {
+  await checkConnection();
+  await loadMotores();
+  await loadDashboard();
+  setInterval(checkConnection, 30000);
+}
+
+if (verificarLogin()) {
+  iniciarApp();
+} else {
+  document.getElementById('loginUser').focus();
+}
+</script>
+</body>
+</html>
