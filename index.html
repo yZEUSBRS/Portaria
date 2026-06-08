@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>PortariaPRO</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0d0f14; --surface:#151820; --surface2:#1c2030; --border:#252a3a;
+  --accent:#f5a623; --accent2:#4fc3f7; --danger:#ff5252; --success:#69f0ae;
+  --warn:#ffca28; --text:#e8eaf6; --muted:#6b7394;
+  --fh:'Syne',sans-serif; --fb:'IBM Plex Sans',sans-serif; --fm:'IBM Plex Mono',monospace;
+  --sidebar:220px; --topbar:56px; --bottombar:64px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow-x:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--fb);display:flex;flex-direction:column}
+
+/* ── SIDEBAR (desktop) ── */
+.sidebar{
+  width:var(--sidebar);height:100vh;background:var(--surface);
+  border-right:1px solid var(--border);display:flex;flex-direction:column;
+  position:fixed;top:0;left:0;z-index:100;transition:transform .25s;
+}
+.logo{padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+.logo-title{font-family:var(--fh);font-size:1.2rem;font-weight:800;color:var(--accent)}
+.logo-sub{font-size:.6rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;font-family:var(--fm);margin-top:2px}
+.nav{padding:12px 0;flex:1;overflow-y:auto}
+.nav-section{padding:6px 20px 2px;font-size:.58rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:var(--fm);margin-top:6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;font-size:.85rem;font-weight:500;color:var(--muted);transition:all .15s;border-left:3px solid transparent}
+.nav-item:hover{color:var(--text);background:var(--surface2)}
+.nav-item.active{color:var(--accent);border-left-color:var(--accent);background:rgba(245,166,35,.07)}
+.nav-icon{font-size:1rem;width:20px;text-align:center;flex-shrink:0}
+.status-bar{padding:12px 20px;border-top:1px solid var(--border);font-size:.68rem;font-family:var(--fm);color:var(--muted)}
+.status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--success);margin-right:6px;animation:pulse 2s infinite}
+.status-dot.offline{background:var(--danger)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ── MAIN ── */
+.main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:0 24px;height:var(--topbar);display:flex;align-items:center;
+  justify-content:space-between;position:sticky;top:0;z-index:50;
+}
+.page-title{font-family:var(--fh);font-size:1rem;font-weight:700}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.time-display{font-family:var(--fm);font-size:.75rem;color:var(--muted);background:var(--surface2);padding:5px 10px;border-radius:6px;border:1px solid var(--border)}
+.db-status{font-family:var(--fm);font-size:.68rem;padding:4px 9px;border-radius:5px;border:1px solid var(--border);white-space:nowrap}
+.db-status.ok{color:var(--success);border-color:rgba(105,240,174,.3);background:rgba(105,240,174,.07)}
+.db-status.err{color:var(--danger);border-color:rgba(255,82,82,.3);background:rgba(255,82,82,.07)}
+.db-status.loading{color:var(--warn);border-color:rgba(255,202,40,.3);background:rgba(255,202,40,.07)}
+.content{padding:20px 24px;flex:1;padding-bottom:32px}
+
+/* ── BOTTOM NAV (mobile) ── */
+.bottom-nav{
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:var(--surface);border-top:1px solid var(--border);
+  height:var(--bottombar);padding:0 4px;
+  display:none;align-items:center;justify-content:space-around;
+}
+.bn-item{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:6px 12px;cursor:pointer;border-radius:8px;transition:all .15s;
+  font-size:.6rem;color:var(--muted);font-family:var(--fm);font-weight:500;
+  flex:1;text-align:center;
+}
+.bn-item.active{color:var(--accent)}
+.bn-item .bn-icon{font-size:1.3rem;line-height:1}
+
+/* ── BUTTONS ── */
+.btn{padding:9px 16px;border-radius:8px;border:none;cursor:pointer;font-family:var(--fb);font-size:.82rem;font-weight:500;transition:all .15s;white-space:nowrap}
+.btn-primary{background:var(--accent);color:#000}
+.btn-primary:hover{background:#ffb84d}
+.btn-primary:active{transform:scale(.97)}
+.btn-outline{background:transparent;color:var(--text);border:1px solid var(--border)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:rgba(255,82,82,.15);color:var(--danger);border:1px solid rgba(255,82,82,.3)}
+.btn-sm{padding:5px 10px;font-size:.73rem}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-icon{padding:8px;border-radius:8px;font-size:1rem;line-height:1}
+
+/* ── FAB (mobile) ── */
+.fab{
+  display:none;position:fixed;bottom:calc(var(--bottombar) + 16px);right:16px;
+  width:52px;height:52px;border-radius:50%;background:var(--accent);color:#000;
+  font-size:1.5rem;border:none;cursor:pointer;z-index:90;
+  box-shadow:0 4px 20px rgba(245,166,35,.4);align-items:center;justify-content:center;
+  transition:transform .15s;
+}
+.fab:active{transform:scale(.92)}
+
+/* ── PAGES ── */
+.page{display:none}
+.page.active{display:block;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── CARDS GRID ── */
+.cards-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px}
+.card-label{font-size:.6rem;text-transform:uppercase;letter-spacing:2px;color:var(--muted);font-family:var(--fm);margin-bottom:6px}
+.card-value{font-family:var(--fh);font-size:1.9rem;font-weight:800;line-height:1}
+.card-sub{font-size:.72rem;color:var(--muted);margin-top:3px}
+.card.accent{border-color:rgba(245,166,35,.4);background:rgba(245,166,35,.06)}
+.card.danger{border-color:rgba(255,82,82,.4);background:rgba(255,82,82,.06)}
+.card.success{border-color:rgba(105,240,174,.4);background:rgba(105,240,174,.06)}
+.card.info{border-color:rgba(79,195,247,.4);background:rgba(79,195,247,.06)}
+
+/* ── SECTION HEADER ── */
+.sec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sec-title{font-family:var(--fh);font-size:.95rem;font-weight:700}
+
+/* ── TABLE (desktop) ── */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px}
+table{width:100%;border-collapse:collapse}
+thead th{background:var(--surface2);padding:9px 14px;text-align:left;font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:var(--fm);border-bottom:1px solid var(--border)}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--surface2)}
+tbody td{padding:10px 14px;font-size:.8rem;vertical-align:middle}
+.td-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+
+/* ── CARD LIST (mobile alternative to table) ── */
+.item-list{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.item-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px}
+.item-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px}
+.item-card-title{font-family:var(--fh);font-size:.9rem;font-weight:700}
+.item-card-sub{font-size:.72rem;color:var(--muted);margin-top:2px}
+.item-card-body{font-size:.8rem;color:var(--text);margin-bottom:10px;line-height:1.5}
+.item-card-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.item-card-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+
+/* ── BADGE ── */
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.65rem;font-weight:600;font-family:var(--fm);text-transform:uppercase;letter-spacing:.5px}
+.badge-ok{background:rgba(105,240,174,.15);color:var(--success)}
+.badge-warn{background:rgba(255,202,40,.15);color:var(--warn)}
+.badge-alert{background:rgba(255,82,82,.15);color:var(--danger)}
+.badge-info{background:rgba(79,195,247,.15);color:var(--accent2)}
+.badge-muted{background:var(--surface2);color:var(--muted)}
+
+/* ── MOTORS GRID ── */
+.motors-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:20px}
+.motor-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;transition:border-color .15s,transform .15s}
+.motor-card:active{transform:scale(.99)}
+.motor-card.status-ok{border-left:4px solid var(--success)}
+.motor-card.status-warn{border-left:4px solid var(--warn)}
+.motor-card.status-alert{border-left:4px solid var(--danger)}
+.motor-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;gap:8px}
+.motor-name{font-family:var(--fh);font-size:.95rem;font-weight:700}
+.motor-cond{font-size:.7rem;color:var(--muted);margin-top:2px}
+.motor-info{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.motor-field-label{font-size:.58rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);font-family:var(--fm)}
+.motor-field-val{font-size:.8rem;font-weight:500;margin-top:1px}
+.motor-actions{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+
+/* ── FORMS ── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group.full{grid-column:1/-1}
+label{font-size:.68rem;color:var(--muted);font-family:var(--fm);letter-spacing:1px;text-transform:uppercase}
+input,select,textarea{
+  background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  color:var(--text);padding:10px 12px;font-family:var(--fb);font-size:.9rem;
+  outline:none;transition:border-color .15s;width:100%;
+  -webkit-appearance:none;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+textarea{resize:vertical;min-height:72px}
+select option{background:var(--surface2)}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:16px 16px 0 0;padding:24px;width:100%;max-width:560px;
+  max-height:92vh;overflow-y:auto;animation:slideUp .25s ease;
+}
+@keyframes slideUp{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px}
+.modal-title{font-family:var(--fh);font-size:1.05rem;font-weight:700;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between}
+.modal-close{cursor:pointer;color:var(--muted);font-size:1.1rem;padding:4px 8px}
+.modal-actions{display:flex;gap:10px;margin-top:18px;justify-content:flex-end}
+
+/* ── ALERT BANNER ── */
+.alert-banner{background:rgba(255,82,82,.1);border:1px solid rgba(255,82,82,.3);border-radius:8px;padding:11px 14px;font-size:.8rem;color:#ff7070;margin-bottom:8px;display:flex;align-items:flex-start;gap:8px;line-height:1.4}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:2px;background:var(--surface2);padding:4px;border-radius:8px;margin-bottom:16px;overflow-x:auto}
+.tab{padding:7px 14px;border-radius:6px;cursor:pointer;font-size:.78rem;font-weight:500;color:var(--muted);transition:all .15s;white-space:nowrap}
+.tab.active{background:var(--accent);color:#000}
+
+/* ── CHECKLIST ── */
+.checklist{display:flex;flex-direction:column;gap:8px}
+.check-item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;font-size:.85rem;cursor:pointer;transition:all .15s;user-select:none}
+.check-item.done{opacity:.5;text-decoration:line-through}
+.check-box{width:20px;height:20px;border:2px solid var(--border);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--success);flex-shrink:0}
+.check-item.done .check-box{background:rgba(105,240,174,.2);border-color:var(--success)}
+.progress-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:20px}
+.progress-fill{height:100%;border-radius:3px;transition:width .4s}
+.fill-ok{background:var(--success)}.fill-warn{background:var(--warn)}.fill-danger{background:var(--danger)}
+
+/* ── LOG ── */
+.log-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);align-items:flex-start;font-size:.78rem}
+.log-item:last-child{border-bottom:none}
+.log-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0}
+.log-time{font-family:var(--fm);font-size:.65rem;color:var(--muted);white-space:nowrap;margin-top:2px}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty-icon{font-size:2.2rem;margin-bottom:8px}
+.empty-text{font-size:.82rem;line-height:1.5}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── DASH TWO COL ── */
+.dash-two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0;padding-bottom:var(--bottombar)}
+  .bottom-nav{display:flex}
+  .fab{display:flex}
+  .topbar{padding:0 16px}
+  .content{padding:14px 14px 20px}
+  .cards-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .card{padding:14px}
+  .card-value{font-size:1.6rem}
+  .dash-two{grid-template-columns:1fr}
+  .motors-grid{grid-template-columns:1fr}
+  .form-grid{grid-template-columns:1fr}
+  .form-group.full{grid-column:1}
+  .time-display{display:none}
+  .table-wrap table{display:none}
+  .mobile-cards{display:flex !important}
+  .modal{border-radius:16px 16px 0 0;max-height:88vh}
+  .modal-actions{flex-direction:column}
+  .modal-actions .btn{width:100%;padding:12px;text-align:center}
+  .sec-header{flex-wrap:wrap;gap:8px}
+  .tabs{width:100%}
+}
+@media(min-width:769px){
+  .bottom-nav{display:none !important}
+  .fab{display:none !important}
+  .mobile-cards{display:none !important}
+  .sidebar{transform:none !important}
+  .sidebar-overlay{display:none !important}
+}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99}
+.sidebar-overlay.open{display:block}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR OVERLAY (mobile) -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="logo">
+    <div class="logo-title">⚙️ PortariaPRO</div>
+    <div class="logo-sub">Gestão de Condomínios</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Principal</div>
+    <div class="nav-item active" onclick="goTo('dashboard',this)"><span class="nav-icon">📊</span><span>Dashboard</span></div>
+    <div class="nav-section">Motores</div>
+    <div class="nav-item" onclick="goTo('motores',this)"><span class="nav-icon">⚙️</span><span>Portões</span></div>
+    <div class="nav-item" onclick="goTo('manutencao',this)"><span class="nav-icon">🔧</span><span>Manutenção</span></div>
+    <div class="nav-section">Operação</div>
+    <div class="nav-item" onclick="goTo('ocorrencias',this)"><span class="nav-icon">📝</span><span>Ocorrências</span></div>
+    <div class="nav-item" onclick="goTo('checklist',this)"><span class="nav-icon">✅</span><span>Checklist</span></div>
+    <div class="nav-item" onclick="goTo('log',this)"><span class="nav-icon">📋</span><span>Registro</span></div>
+  </nav>
+  <div class="status-bar"><span class="status-dot" id="statusDot"></span><span id="statusText">Conectando...</span></div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="btn btn-outline btn-icon" id="menuBtn" onclick="toggleSidebar()" style="display:none">☰</button>
+      <div class="page-title" id="pageTitle">Dashboard</div>
+    </div>
+    <div class="topbar-right">
+      <div class="db-status loading" id="dbStatus">⏳</div>
+      <div class="time-display" id="clock">--:--</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="cards-grid">
+        <div class="card accent"><div class="card-label">Portões</div><div class="card-value" id="statMotores">—</div><div class="card-sub">cadastrados</div></div>
+        <div class="card danger"><div class="card-label">Manutenções</div><div class="card-value" id="statManut">—</div><div class="card-sub">pendentes</div></div>
+        <div class="card success"><div class="card-label">Ocorrências</div><div class="card-value" id="statOcorr">—</div><div class="card-sub">hoje</div></div>
+        <div class="card info"><div class="card-label">Checklist</div><div class="card-value" id="statCheck">—</div><div class="card-sub">concluído</div></div>
+      </div>
+      <div class="dash-two">
+        <div>
+          <div class="sec-header"><div class="sec-title">⚠️ Alertas</div></div>
+          <div id="dashAlerts"><div class="empty"><div class="empty-icon"><div class="spinner"></div></div></div></div>
+        </div>
+        <div>
+          <div class="sec-header"><div class="sec-title">📋 Atividades Recentes</div></div>
+          <div id="dashLog" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px">
+            <div class="empty"><div class="empty-icon"><div class="spinner"></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOTORES -->
+    <div class="page" id="page-motores">
+      <div class="sec-header">
+        <div class="sec-title">⚙️ Portões & Motores</div>
+        <button class="btn btn-primary" id="btnNovoPortao" onclick="openModal('modalMotor')">+ Cadastrar</button>
+      </div>
+      <div class="motors-grid" id="motoresGrid">
+        <div class="empty" style="grid-column:1/-1"><div class="empty-icon"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+    <!-- MANUTENÇÃO -->
+    <div class="page" id="page-manutencao">
+      <div class="sec-header">
+        <div class="tabs">
+          <div class="tab active" onclick="filterManut('todos',this)">Todos</div>
+          <div class="tab" onclick="filterManut('pendente',this)">Pendentes</div>
+          <div class="tab" onclick="filterManut('concluido',this)">Concluídos</div>
+        </div>
+        <button class="btn btn-primary" id="btnNovaManut" onclick="openModal('modalManut')">+ Registrar</button>
+      </div>
+      <!-- Desktop table -->
+      <div class="table-wrap">
+        <table><thead><tr><th>Portão</th><th>Descrição</th><th>Prioridade</th><th>Data</th><th>Status</th><th>Ações</th></tr></thead>
+        <tbody id="manutTable"><tr><td colspan="6" style="text-align:center;padding:28px;color:var(--muted)"><div class="spinner" style="margin:auto"></div></td></tr></tbody></table>
+      </div>
+      <!-- Mobile cards -->
+      <div class="item-list mobile-cards" id="manutCards" style="display:none"></div>
+    </div>
+
+    <!-- OCORRÊNCIAS -->
+    <div class="page" id="page-ocorrencias">
+      <div class="sec-header">
+        <div class="sec-title">📝 Ocorrências</div>
+        <button class="btn btn-primary" id="btnNovaOcorr" onclick="openModal('modalOcorr')">+ Registrar</button>
+      </div>
+      <!-- Desktop table -->
+      <div class="table-wrap">
+        <table><thead><tr><th>Data/Hora</th><th>Tipo</th><th>Local</th><th>Descrição</th><th>Status</th><th>Ações</th></tr></thead>
+        <tbody id="ocorrTable"><tr><td colspan="6" style="text-align:center;padding:28px;color:var(--muted)"
